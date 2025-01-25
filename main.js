@@ -48,7 +48,7 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
       }
 
       // Login ke Discord menggunakan token
-      await page.goto("https://discord.com/login", { waitUntil: "networkidle2", timeout: 60000 });
+      await page.goto("https://discord.com/login", { waitUntil: "domcontentloaded", timeout: 60000 });
       console.log("Menyimpan token ke localStorage...");
       await page.evaluate((token) => {
         if (typeof window.localStorage !== "undefined") {
@@ -56,13 +56,13 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
         }
       }, token);
 
-      await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
+      await page.reload({ waitUntil: "domcontentloaded", timeout: 60000 });
 
       // Mengecek apakah login berhasil dengan melihat elemen user yang ada setelah login
       console.log("Memverifikasi login Discord...");
       const loggedInSelector = 'div[aria-label="User Settings"]'; // Selector untuk tombol pengaturan pengguna yang hanya muncul setelah login
       try {
-        await page.waitForSelector(loggedInSelector, { timeout: 10000 });
+        await page.waitForSelector(loggedInSelector, { timeout: 20000 });
         console.log(`Login Discord berhasil dengan token ${index + 1}`);
       } catch (error) {
         console.log(`Login Discord gagal dengan token ${index + 1}`);
