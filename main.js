@@ -33,7 +33,7 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
   const browser = await puppeteer.launch({
     headless: true,
     executablePath: "/usr/bin/chromium-browser", // Path ke Chromium
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu"],
   });
 
   for (const [index, token] of discordTokens.entries()) {
@@ -48,20 +48,19 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
         window.localStorage.setItem("token", `"${token}"`);
       }, token);
 
+      // Tunggu halaman dimuat kembali setelah token dimasukkan
       await page.reload({ waitUntil: "networkidle2" });
+      await page.waitForSelector('div[aria-label="Home"]'); // Pastikan login berhasil
 
       // 2. Login ke app.drip.re dan connect Discord
       console.log("Login ke app.drip.re...");
-      await page.goto("https://app.drip.re/settings?tab=connections", {
-        waitUntil: "networkidle2",
-      });
+      await page.goto("https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
 
       console.log("Mencari tombol Connect Discord...");
-      const connectDiscordSelector = 'button:contains("Connect Discord")'; // Sesuaikan selector
-      const connectDiscordButton = await page.$(connectDiscordSelector);
-      if (connectDiscordButton) {
+      const connectDiscordButton = await page.$x("//button[contains(text(), 'Connect Discord')]");
+      if (connectDiscordButton.length > 0) {
         console.log("Klik tombol Connect Discord...");
-        await connectDiscordButton.click();
+        await connectDiscordButton[0].click();
         await page.waitForNavigation({ waitUntil: "networkidle2" });
       } else {
         console.log("Sudah terhubung ke Discord.");
@@ -87,16 +86,13 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
 
       // 4. Akses channel Discord dan tekan tombol Verify
       console.log(`Mengakses channel ID: ${channelID}`);
-      await page.goto(`https://discord.com/channels/@me/${channelID}`, {
-        waitUntil: "networkidle2",
-      });
+      await page.goto(`https://discord.com/channels/@me/${channelID}`, { waitUntil: "networkidle2" });
 
       console.log("Mencari tombol Verify...");
-      const verifySelector = 'button:contains("Verify")'; // Sesuaikan selector tombol
-      const verifyButton = await page.$(verifySelector);
-      if (verifyButton) {
+      const verifyButton = await page.$x("//button[contains(text(), 'Verify')]");
+      if (verifyButton.length > 0) {
         console.log("Klik tombol Verify...");
-        await verifyButton.click();
+        await verifyButton[0].click();
         console.log("Berhasil menekan tombol Verify.");
       } else {
         console.log("Tidak ada tombol Verify yang ditemukan.");
@@ -104,16 +100,13 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
 
       // 5. Kembali ke app.drip.re dan Unconnect Twitter
       console.log("Kembali ke app.drip.re untuk Unconnect Twitter...");
-      await page.goto("https://app.drip.re/settings?tab=connections", {
-        waitUntil: "networkidle2",
-      });
+      await page.goto("https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
 
       console.log("Mencari tombol Unconnect Twitter...");
-      const unconnectTwitterSelector = 'button:contains("Unconnect Twitter")'; // Sesuaikan selector
-      const unconnectTwitterButton = await page.$(unconnectTwitterSelector);
-      if (unconnectTwitterButton) {
+      const unconnectTwitterButton = await page.$x("//button[contains(text(), 'Unconnect Twitter')]");
+      if (unconnectTwitterButton.length > 0) {
         console.log("Klik tombol Unconnect Twitter...");
-        await unconnectTwitterButton.click();
+        await unconnectTwitterButton[0].click();
         console.log("Berhasil memutus koneksi Twitter.");
       } else {
         console.log("Tidak ada tombol Unconnect Twitter yang ditemukan.");
