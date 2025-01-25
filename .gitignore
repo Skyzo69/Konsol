@@ -128,3 +128,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Ignore token and cookie files
+discord_tokens.txt
+twitter_cookies.txt
