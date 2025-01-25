@@ -51,23 +51,9 @@ if (discordTokens.length === 0) {
 
       await page.reload({ waitUntil: "networkidle2" });
 
-      // 2. Login ke app.drip.re dan connect Discord
+      // 2. Login ke app.drip.re secara langsung
       console.log("Login ke app.drip.re...");
       await page.goto("https://app.drip.re/login?callbackUrl=https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
-
-      console.log("Mencari tombol Connect with Discord...");
-      const connectWithDiscordButton = await page.evaluate(() => {
-        const button = Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes("Connect with Discord"));
-        return button ? button : null;
-      });
-
-      if (connectWithDiscordButton) {
-        console.log("Klik tombol Connect with Discord...");
-        await connectWithDiscordButton.click();
-        await page.waitForNavigation({ waitUntil: "networkidle2" });
-      } else {
-        console.log("Tombol 'Connect with Discord' tidak ditemukan.");
-      }
 
       // 3. Menunggu halaman OAuth Discord dan menekan tombol "Authorize"
       console.log("Mencari tombol Authorize di halaman OAuth...");
@@ -81,44 +67,11 @@ if (discordTokens.length === 0) {
         console.log("Tombol Authorize tidak ditemukan.");
       }
 
-      // 4. Kembali ke halaman koneksi dan cari tombol "Link" di bawah logo Twitter
+      // 4. Kembali ke halaman koneksi untuk verifikasi
       console.log("Kembali ke https://app.drip.re/settings?tab=connections...");
       await page.goto("https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
 
-      console.log("Mencari tombol Link di bawah logo Twitter...");
-      const linkButton = await page.evaluate(() => {
-        // Mencari tombol Link di bawah logo Twitter
-        const twitterButton = Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes("Link"));
-        return twitterButton ? twitterButton : null;
-      });
-
-      if (linkButton) {
-        console.log("Klik tombol Link di bawah logo Twitter...");
-        await linkButton.click();
-        await page.waitForNavigation({ waitUntil: "networkidle2" });
-      } else {
-        console.log("Tombol Link tidak ditemukan.");
-      }
-
-      // 5. Menunggu halaman OAuth Twitter untuk auto-authorization
-      console.log("Mencari tombol Allow di halaman OAuth Twitter...");
-      await page.waitForSelector('button[type="submit"]'); // Tunggu tombol Allow muncul di halaman OAuth Twitter
-      const allowButton = await page.$('button[type="submit"]'); // Tombol "Allow" biasanya bertipe submit
-      if (allowButton) {
-        console.log("Klik tombol Allow...");
-        await allowButton.click();
-        await page.waitForNavigation({ waitUntil: "networkidle2" });
-        console.log("Berhasil mengotorisasi Twitter.");
-      } else {
-        console.log("Tombol Allow tidak ditemukan.");
-      }
-
-      // 6. Kembali ke halaman Drip dan selesai
-      console.log("Kembali ke https://app.drip.re/settings?tab=connections untuk memverifikasi koneksi...");
-      await page.goto("https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
-
-      // Menunggu hingga semua koneksi selesai
-      console.log("Semua koneksi selesai.");
+      console.log("Proses login dan otorisasi Discord selesai.");
       
     } catch (error) {
       console.error(`Terjadi kesalahan dengan token Discord (${index + 1}): ${token}`, error);
