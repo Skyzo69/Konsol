@@ -39,7 +39,7 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
     const page = await browser.newPage();
 
     try {
-      console.log(`(${index + 1}/${discordTokens.length}) Login dengan token Discord: ${token}`);
+      console.log(`(${index + 1}/${discordTokens.length}) Mencoba login dengan token Discord: ${token}`);
 
       // Pastikan token tidak kosong
       if (!token || token.trim() === "") {
@@ -48,7 +48,7 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
       }
 
       // Login ke Discord menggunakan token
-      await page.goto("https://discord.com/login", { waitUntil: "networkidle2" });
+      await page.goto("https://discord.com/login", { waitUntil: "networkidle2", timeout: 60000 });
       console.log("Menyimpan token ke localStorage...");
       await page.evaluate((token) => {
         if (typeof window.localStorage !== "undefined") {
@@ -56,13 +56,24 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
         }
       }, token);
 
-      await page.reload({ waitUntil: "networkidle2" });
+      await page.reload({ waitUntil: "networkidle2", timeout: 60000 });
+
+      // Mengecek apakah login berhasil dengan melihat elemen user yang ada setelah login
+      console.log("Memverifikasi login Discord...");
+      const loggedInSelector = 'div[aria-label="User Settings"]'; // Selector untuk tombol pengaturan pengguna yang hanya muncul setelah login
+      try {
+        await page.waitForSelector(loggedInSelector, { timeout: 10000 });
+        console.log(`Login Discord berhasil dengan token ${index + 1}`);
+      } catch (error) {
+        console.log(`Login Discord gagal dengan token ${index + 1}`);
+        continue; // Lewati token ini dan lanjutkan ke token berikutnya
+      }
 
       // Login ke app.drip.re dan connect Discord
       console.log("Login ke app.drip.re...");
       await page.goto(
         "https://app.drip.re/login?callbackUrl=https://app.drip.re/settings?tab=connections",
-        { waitUntil: "networkidle2" }
+        { waitUntil: "networkidle2", timeout: 60000 }
       );
 
       // Menggunakan selector CSS yang diberikan untuk tombol "Connect with Discord"
@@ -70,21 +81,26 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
       const connectWithDiscordButtonSelector =
         "body > div:nth-child(16) > div.flex.h-screen.w-screen.items-center.justify-center.bg-black > div > div > div > div > div > div > div:nth-child(2) > div.login-view__container > div > div > div > button > div > span > div > p";
 
-      await page.waitForSelector(connectWithDiscordButtonSelector, { timeout: 5000 });
+      await page.waitForSelector(connectWithDiscordButtonSelector, { timeout: 10000 });
       console.log("Klik tombol Connect with Discord...");
       await page.click(connectWithDiscordButtonSelector);
-      await page.waitForNavigation({ waitUntil: "networkidle2" });
+
+      // Tunggu dan navigasi ke halaman OAuth
+      await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 60000 });
 
       // Menunggu halaman OAuth Discord dan menekan tombol "Authorize"
       console.log("Mencari tombol Authorize di halaman OAuth...");
-      await page.waitForSelector('button[type="submit"]'); // Tunggu tombol submit (Authorize) muncul
-      const authorizeButton = await page.$('button[type="submit"]');
+      const authorizeButtonSelector = 'button[type="submit"]';
+      const authorizeButton = await page.$(authorizeButtonSelector);
+
       if (authorizeButton) {
-        console.log("Klik tombol Authorize...");
+        console.log("Tombol Authorize ditemukan, klik tombol...");
         await authorizeButton.click();
-        await page.waitForNavigation({ waitUntil: "networkidle2" });
+        await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 60000 });
+        console.log("Tombol Authorize berhasil ditekan dan navigasi selesai.");
       } else {
-        console.log("Tombol Authorize tidak ditemukan.");
+        console.log("Tombol Authorize tidak ditemukan. Melewati token ini...");
+        continue; // Lewati token ini dan lanjutkan ke token berikutnya
       }
 
     } catch (error) {
