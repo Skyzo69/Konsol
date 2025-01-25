@@ -1,0 +1,15 @@
+{
+  "name": "discord-twitter-login",
+  "version": "1.0.0",
+  "description": "Skrip untuk login ke Discord dan Twitter menggunakan token dan cookie",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "puppeteer": "^19.0.0"
+  },
+  "devDependencies": {},
+  "author": "Konsol",
+  "license": "MIT"
+}
