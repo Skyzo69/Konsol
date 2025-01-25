@@ -30,7 +30,11 @@ if (twitterCookies.length === 0) {
 const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
 
 (async () => {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({
+    headless: false,
+    executablePath: "/usr/bin/chromium-browser", // Path ke Chromium
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
   for (const [index, token] of discordTokens.entries()) {
     const page = await browser.newPage();
@@ -54,10 +58,6 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
 
       console.log("Mencari tombol Connect Discord...");
       const connectDiscordSelector = 'button:contains("Connect Discord")'; // Sesuaikan selector
-      await page.waitForSelector(connectDiscordSelector, { timeout: 5000 }).catch(() => {
-        console.log("Tombol Connect Discord tidak ditemukan.");
-      });
-
       const connectDiscordButton = await page.$(connectDiscordSelector);
       if (connectDiscordButton) {
         console.log("Klik tombol Connect Discord...");
@@ -72,9 +72,9 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
         console.log("Login ke Twitter dengan cookie...");
 
         // Set cookies untuk login ke Twitter
-        const cookies = twitterCookies[index].split(';').map(cookie => {
-          const [name, value] = cookie.split('=');
-          return { name: name.trim(), value: value.trim(), domain: 'twitter.com', path: '/' };
+        const cookies = twitterCookies[index].split(";").map((cookie) => {
+          const [name, value] = cookie.split("=");
+          return { name: name.trim(), value: value.trim(), domain: "twitter.com", path: "/" };
         });
 
         await page.setCookie(...cookies); // Menetapkan cookie ke halaman
@@ -82,7 +82,7 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
         // Akses halaman Twitter untuk memastikan login berhasil
         await page.goto("https://twitter.com", { waitUntil: "networkidle2" });
         await page.waitForSelector('div[data-testid="primaryColumn"]'); // Pastikan halaman sudah dimuat
-        console.log('Login berhasil dengan auth_token!');
+        console.log("Login berhasil dengan auth_token!");
       }
 
       // 4. Akses channel Discord dan tekan tombol Verify
@@ -93,10 +93,6 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
 
       console.log("Mencari tombol Verify...");
       const verifySelector = 'button:contains("Verify")'; // Sesuaikan selector tombol
-      await page.waitForSelector(verifySelector, { timeout: 5000 }).catch(() => {
-        console.log("Tombol Verify tidak ditemukan.");
-      });
-
       const verifyButton = await page.$(verifySelector);
       if (verifyButton) {
         console.log("Klik tombol Verify...");
@@ -114,10 +110,6 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
 
       console.log("Mencari tombol Unconnect Twitter...");
       const unconnectTwitterSelector = 'button:contains("Unconnect Twitter")'; // Sesuaikan selector
-      await page.waitForSelector(unconnectTwitterSelector, { timeout: 5000 }).catch(() => {
-        console.log("Tombol Unconnect Twitter tidak ditemukan.");
-      });
-
       const unconnectTwitterButton = await page.$(unconnectTwitterSelector);
       if (unconnectTwitterButton) {
         console.log("Klik tombol Unconnect Twitter...");
