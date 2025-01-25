@@ -32,7 +32,6 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
 (async () => {
   const browser = await puppeteer.launch({
     headless: true,
-    executablePath: "/usr/bin/chromium-browser", // Path ke Chromium
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
@@ -48,9 +47,8 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
         continue; // Lewati token yang tidak valid
       }
 
-      // 1. Login ke Discord menggunakan token
+      // Login ke Discord menggunakan token
       await page.goto("https://discord.com/login", { waitUntil: "networkidle2" });
-      await page.waitForSelector('input[type="text"]'); // Tunggu sampai elemen input muncul
       console.log("Menyimpan token ke localStorage...");
       await page.evaluate((token) => {
         if (typeof window.localStorage !== "undefined") {
@@ -60,25 +58,24 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
 
       await page.reload({ waitUntil: "networkidle2" });
 
-      // 2. Login ke app.drip.re dan connect Discord
+      // Login ke app.drip.re dan connect Discord
       console.log("Login ke app.drip.re...");
-      await page.goto("https://app.drip.re/login?callbackUrl=https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
+      await page.goto(
+        "https://app.drip.re/login?callbackUrl=https://app.drip.re/settings?tab=connections",
+        { waitUntil: "networkidle2" }
+      );
 
+      // Menggunakan selector CSS yang diberikan untuk tombol "Connect with Discord"
       console.log("Mencari tombol Connect with Discord...");
-      const connectWithDiscordButton = await page.evaluate(() => {
-        const button = Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes("Connect with Discord"));
-        return button ? button : null;
-      });
+      const connectWithDiscordButtonSelector =
+        "body > div:nth-child(16) > div.flex.h-screen.w-screen.items-center.justify-center.bg-black > div > div > div > div > div > div > div:nth-child(2) > div.login-view__container > div > div > div > button > div > span > div > p";
 
-      if (connectWithDiscordButton) {
-        console.log("Klik tombol Connect with Discord...");
-        await connectWithDiscordButton.click();
-        await page.waitForNavigation({ waitUntil: "networkidle2" });
-      } else {
-        console.log("Tombol 'Connect with Discord' tidak ditemukan.");
-      }
+      await page.waitForSelector(connectWithDiscordButtonSelector, { timeout: 5000 });
+      console.log("Klik tombol Connect with Discord...");
+      await page.click(connectWithDiscordButtonSelector);
+      await page.waitForNavigation({ waitUntil: "networkidle2" });
 
-      // 3. Menunggu halaman OAuth Discord dan menekan tombol "Authorize"
+      // Menunggu halaman OAuth Discord dan menekan tombol "Authorize"
       console.log("Mencari tombol Authorize di halaman OAuth...");
       await page.waitForSelector('button[type="submit"]'); // Tunggu tombol submit (Authorize) muncul
       const authorizeButton = await page.$('button[type="submit"]');
@@ -90,59 +87,6 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
         console.log("Tombol Authorize tidak ditemukan.");
       }
 
-      // 4. Login ke Twitter dengan menggunakan cookie
-      if (twitterCookies[index]) {
-        console.log("Login ke Twitter dengan cookie...");
-
-        // Set cookies untuk login ke Twitter
-        const cookies = twitterCookies[index].split(";").map((cookie) => {
-          const [name, value] = cookie.split("=");
-          return { name: name.trim(), value: value.trim(), domain: "twitter.com", path: "/" };
-        });
-
-        await page.setCookie(...cookies); // Menetapkan cookie ke halaman
-
-        // Akses halaman Twitter untuk memastikan login berhasil
-        await page.goto("https://twitter.com", { waitUntil: "networkidle2" });
-        await page.waitForSelector('div[data-testid="primaryColumn"]'); // Pastikan halaman sudah dimuat
-        console.log("Login berhasil dengan auth_token!");
-      }
-
-      // 5. Akses channel Discord dan tekan tombol Verify
-      console.log(`Mengakses channel ID: ${channelID}`);
-      await page.goto(`https://discord.com/channels/@me/${channelID}`, { waitUntil: "networkidle2" });
-
-      console.log("Mencari tombol Verify...");
-      const verifyButton = await page.evaluate(() => {
-        const button = Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes("Verify"));
-        return button ? button : null;
-      });
-
-      if (verifyButton) {
-        console.log("Klik tombol Verify...");
-        await verifyButton.click();
-        console.log("Berhasil menekan tombol Verify.");
-      } else {
-        console.log("Tidak ada tombol Verify yang ditemukan.");
-      }
-
-      // 6. Kembali ke app.drip.re dan Unconnect Twitter
-      console.log("Kembali ke app.drip.re untuk Unconnect Twitter...");
-      await page.goto("https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
-
-      console.log("Mencari tombol Unconnect Twitter...");
-      const unconnectTwitterButton = await page.evaluate(() => {
-        const button = Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes("Unconnect Twitter"));
-        return button ? button : null;
-      });
-
-      if (unconnectTwitterButton) {
-        console.log("Klik tombol Unconnect Twitter...");
-        await unconnectTwitterButton.click();
-        console.log("Berhasil memutus koneksi Twitter.");
-      } else {
-        console.log("Tidak ada tombol Unconnect Twitter yang ditemukan.");
-      }
     } catch (error) {
       console.error(`Terjadi kesalahan dengan token Discord (${index + 1}): ${token}`, error);
     } finally {
