@@ -12,26 +12,17 @@ function loadTokens(filename) {
   }
 }
 
-// Memuat token Discord dan cookies Twitter dari file masing-masing
+// Memuat token Discord dari file
 const discordTokens = loadTokens("discord_tokens.txt");
-const twitterCookies = loadTokens("twitter_cookies.txt");
 
 if (discordTokens.length === 0) {
   console.error("Tidak ada token Discord yang ditemukan di discord_tokens.txt");
   process.exit(1); // Keluar dari program jika tidak ada token Discord
 }
 
-if (twitterCookies.length === 0) {
-  console.error("Tidak ada cookie Twitter yang ditemukan di twitter_cookies.txt");
-  process.exit(1); // Keluar dari program jika tidak ada cookie Twitter
-}
-
-// ID channel Discord
-const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
-
 (async () => {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false, // Agar bisa melihat proses secara visual
     executablePath: "/usr/bin/chromium-browser", // Path ke Chromium
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
