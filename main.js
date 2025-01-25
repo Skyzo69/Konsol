@@ -62,63 +62,73 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
 
       // 2. Login ke app.drip.re dan connect Discord
       console.log("Login ke app.drip.re...");
-      await page.goto("https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
+      await page.goto("https://app.drip.re/login?callbackUrl=https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
 
-      console.log("Mencari tombol Connect Discord...");
-      const connectDiscordButton = await page.$x('//button[contains(text(), "Connect Discord")]');
-      if (connectDiscordButton.length > 0) {
-        console.log("Klik tombol Connect Discord...");
-        await connectDiscordButton[0].click();
+      console.log("Mencari tombol Connect with Discord...");
+      const connectWithDiscordButton = await page.evaluate(() => {
+        const button = Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes("Connect with Discord"));
+        return button ? button : null;
+      });
+
+      if (connectWithDiscordButton) {
+        console.log("Klik tombol Connect with Discord...");
+        await connectWithDiscordButton.click();
         await page.waitForNavigation({ waitUntil: "networkidle2" });
       } else {
-        console.log("Sudah terhubung ke Discord.");
+        console.log("Tombol 'Connect with Discord' tidak ditemukan.");
       }
 
-      // 3. Login ke Twitter dengan menggunakan cookie
-      if (twitterCookies[index]) {
-        console.log("Login ke Twitter dengan cookie...");
-
-        // Set cookies untuk login ke Twitter
-        const cookies = twitterCookies[index].split(";").map((cookie) => {
-          const [name, value] = cookie.split("=");
-          return { name: name.trim(), value: value.trim(), domain: "twitter.com", path: "/" };
-        });
-
-        await page.setCookie(...cookies); // Menetapkan cookie ke halaman
-
-        // Akses halaman Twitter untuk memastikan login berhasil
-        await page.goto("https://twitter.com", { waitUntil: "networkidle2" });
-        await page.waitForSelector('div[data-testid="primaryColumn"]'); // Pastikan halaman sudah dimuat
-        console.log("Login berhasil dengan auth_token!");
-      }
-
-      // 4. Akses channel Discord dan tekan tombol Verify
-      console.log(`Mengakses channel ID: ${channelID}`);
-      await page.goto(`https://discord.com/channels/@me/${channelID}`, { waitUntil: "networkidle2" });
-
-      console.log("Mencari tombol Verify...");
-      const verifyButton = await page.$x('//button[contains(text(), "Verify")]');
-      if (verifyButton.length > 0) {
-        console.log("Klik tombol Verify...");
-        await verifyButton[0].click();
-        console.log("Berhasil menekan tombol Verify.");
+      // 3. Menunggu halaman OAuth Discord dan menekan tombol "Authorize"
+      console.log("Mencari tombol Authorize di halaman OAuth...");
+      await page.waitForSelector('button[type="submit"]'); // Tunggu tombol submit (Authorize) muncul
+      const authorizeButton = await page.$('button[type="submit"]');
+      if (authorizeButton) {
+        console.log("Klik tombol Authorize...");
+        await authorizeButton.click();
+        await page.waitForNavigation({ waitUntil: "networkidle2" });
       } else {
-        console.log("Tidak ada tombol Verify yang ditemukan.");
+        console.log("Tombol Authorize tidak ditemukan.");
       }
 
-      // 5. Kembali ke app.drip.re dan Unconnect Twitter
-      console.log("Kembali ke app.drip.re untuk Unconnect Twitter...");
+      // 4. Kembali ke halaman koneksi dan cari tombol "Link" di bawah logo Twitter
+      console.log("Kembali ke https://app.drip.re/settings?tab=connections...");
       await page.goto("https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
 
-      console.log("Mencari tombol Unconnect Twitter...");
-      const unconnectTwitterButton = await page.$x('//button[contains(text(), "Unconnect Twitter")]');
-      if (unconnectTwitterButton.length > 0) {
-        console.log("Klik tombol Unconnect Twitter...");
-        await unconnectTwitterButton[0].click();
-        console.log("Berhasil memutus koneksi Twitter.");
+      console.log("Mencari tombol Link di bawah logo Twitter...");
+      const linkButton = await page.evaluate(() => {
+        // Mencari tombol Link di bawah logo Twitter
+        const twitterButton = Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes("Link"));
+        return twitterButton ? twitterButton : null;
+      });
+
+      if (linkButton) {
+        console.log("Klik tombol Link di bawah logo Twitter...");
+        await linkButton.click();
+        await page.waitForNavigation({ waitUntil: "networkidle2" });
       } else {
-        console.log("Tidak ada tombol Unconnect Twitter yang ditemukan.");
+        console.log("Tombol Link tidak ditemukan.");
       }
+
+      // 5. Menunggu halaman OAuth Twitter untuk auto-authorization
+      console.log("Mencari tombol Allow di halaman OAuth Twitter...");
+      await page.waitForSelector('button[type="submit"]'); // Tunggu tombol Allow muncul di halaman OAuth Twitter
+      const allowButton = await page.$('button[type="submit"]'); // Tombol "Allow" biasanya bertipe submit
+      if (allowButton) {
+        console.log("Klik tombol Allow...");
+        await allowButton.click();
+        await page.waitForNavigation({ waitUntil: "networkidle2" });
+        console.log("Berhasil mengotorisasi Twitter.");
+      } else {
+        console.log("Tombol Allow tidak ditemukan.");
+      }
+
+      // 6. Kembali ke halaman Drip dan selesai
+      console.log("Kembali ke https://app.drip.re/settings?tab=connections untuk memverifikasi koneksi...");
+      await page.goto("https://app.drip.re/settings?tab=connections", { waitUntil: "networkidle2" });
+
+      // Menunggu hingga semua koneksi selesai
+      console.log("Semua koneksi selesai.");
+      
     } catch (error) {
       console.error(`Terjadi kesalahan dengan token Discord (${index + 1}): ${token}`, error);
     } finally {
