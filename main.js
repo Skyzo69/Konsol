@@ -31,7 +31,7 @@ const channelID = "1324498333758390353"; // Ganti dengan ID channel yang benar
 
 (async () => {
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     executablePath: "/usr/bin/chromium-browser", // Path ke Chromium
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
